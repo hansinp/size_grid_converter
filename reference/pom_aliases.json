@@ -1,0 +1,190 @@
+{
+  "_comment": [
+    "Maps size_guide.csv columns to the Points of Measurement (POM) labels used in tech-pack",
+    "spec sheets. Patterns are case-insensitive regexes matched against the POM label after",
+    "normalisation (uppercased, whitespace collapsed).",
+    "",
+    "A column resolves to 'auto' only when EXACTLY ONE POM row survives include-minus-exclude.",
+    "Zero survivors means 'missing' (the cell is left blank). Two or more means 'ambiguous',",
+    "and the agent must ask the human which row to use. Do not add tie-breaker priorities here",
+    "to make ambiguous cases resolve themselves -- an ambiguous case is a question, not a guess.",
+    "",
+    "Rules are layered, and a row is dropped if ANY layer excludes it:",
+    "  exclude_always  applied to every column; drops lining / under-dress duplicate rows,",
+    "                  which some workbooks mark with a LINING section header and others",
+    "                  mark inline in the label (e.g. 'BUST/under dress 1\" below arm hole').",
+    "  kind_excludes   applied by the column's 'kind'. A girth column measures around the",
+    "                  body, so a row whose label announces a LENGTH, DROP, HEIGHT, WIDTH or",
+    "                  ACROSS measurement is never a candidate for it. This is what keeps",
+    "                  'CF SKIRT LENGTH below waist seam to hem' out of the waist candidates.",
+    "  include/exclude the column's own patterns.",
+    "",
+    "'verified' marks a family whose mapping has been checked against known-good output rows.",
+    "Unverified families are reported as needing human confirmation for every column."
+  ],
+
+  "size_tokens": ["XXS", "XS", "S", "M", "L", "XL", "XXL", "2XL", "3XL"],
+
+  "lining_section_pattern": "LINING|UNDER ?DRESS|UNDERLAY|UNDER ?LAYER",
+
+  "exclude_always": ["\\bLINING\\b", "UNDER ?DRESS", "\\bUNDERLAY\\b", "UNDER ?LAYER"],
+
+  "kind_excludes": {
+    "girth": ["\\bLENGTH\\b", "\\bPLACEMENT\\b", "\\bDROP\\b", "\\bHEIGHT\\b", "\\bWIDTH\\b", "\\bACROSS\\b"],
+    "length": ["\\bPLACEMENT\\b"]
+  },
+
+  "families": {
+    "dress": {
+      "verified": true,
+      "verified_against": ["ELEN07", "KATHERINE07"],
+      "detect": ["\\bDRESS\\b", "\\bGOWN\\b", "\\bCAFTAN\\b", "\\bKAFTAN\\b"],
+      "columns": {
+        "size.dress_length": {
+          "kind": "length",
+          "include": ["\\bBODY LENGTH\\b", "\\bFRONT LENGTH\\b"],
+          "exclude": ["^C\\.?B\\b", "^BACK\\b", "^CENTER BACK\\b", "\\bBACK LENGTH\\b", "SKIRT", "SLIT", "BODICE", "SLEEVE", "\\bSLV\\b"]
+        },
+        "size.dress_bust": {
+          "kind": "girth",
+          "include": ["\\bBUST\\b", "\\bCHEST\\b"],
+          "exclude": []
+        },
+        "size.dress_waist": {
+          "kind": "girth",
+          "include": ["\\bWAIST\\b"],
+          "exclude": []
+        },
+        "size.dress_hips": {
+          "kind": "girth",
+          "include": ["\\bHIPS?\\b"],
+          "exclude": []
+        },
+        "size.dress_sleeve_length": {
+          "kind": "length",
+          "include": ["\\bSLEEVE LENGTH\\b", "\\bSLV LENGTH\\b"],
+          "exclude": ["\\bUNDER ?SLEEVE\\b", "\\bUNDER ?SLV\\b", "\\bCAP\\b"]
+        }
+      }
+    },
+
+    "tops": {
+      "verified": true,
+      "verified_against": ["ALIVIA05"],
+      "detect": ["\\bTOP\\b", "\\bBLOUSE\\b", "\\bSHIRT\\b", "\\bTEE\\b", "\\bT-SHIRT\\b", "\\bSWEATER\\b", "\\bJACKET\\b", "\\bCARDIGAN\\b", "\\bTANK\\b", "\\bBODYSUIT\\b"],
+      "columns": {
+        "size.tops_length": {
+          "kind": "length",
+          "include": ["\\bBODY LENGTH\\b", "\\bFRONT LENGTH\\b"],
+          "exclude": ["^C\\.?B\\b", "^BACK\\b", "^CENTER BACK\\b", "\\bBACK LENGTH\\b", "SKIRT", "SLIT", "BODICE", "SLEEVE", "\\bSLV\\b"]
+        },
+        "size.tops_bust": {
+          "kind": "girth",
+          "include": ["\\bBUST\\b"],
+          "exclude": []
+        },
+        "size.tops_chest": {
+          "kind": "girth",
+          "include": ["\\bCHEST\\b"],
+          "exclude": []
+        },
+        "size.tops_armhole": {
+          "kind": "girth",
+          "include": ["\\bARM ?HOLE\\b"],
+          "exclude": ["CURVE", "\\bEDGE\\b", "^FR(ON)?T\\b", "^B(A)?CK\\b", "CONTRAST", "PANEL"]
+        },
+        "size.tops_sleeve_length": {
+          "kind": "length",
+          "include": ["\\bSLEEVE LENGTH\\b", "\\bSLV LENGTH\\b"],
+          "exclude": ["\\bUNDER ?SLEEVE\\b", "\\bUNDER ?SLV\\b", "\\bCAP\\b"]
+        },
+        "size.tops_sweep": {
+          "kind": "girth",
+          "include": ["\\bSWEEP\\b"],
+          "exclude": []
+        }
+      }
+    },
+
+    "bottoms": {
+      "verified": false,
+      "verified_against": [],
+      "detect": ["\\bPANT\\b", "\\bPANTS\\b", "\\bSHORT\\b", "\\bSHORTS\\b", "\\bSKIRT\\b", "\\bJEAN\\b", "\\bJEANS\\b", "\\bTROUSER\\b", "\\bLEGGING\\b", "\\bCULOTTE\\b"],
+      "columns": {
+        "size.bottoms_length": {
+          "kind": "length",
+          "include": ["\\bOUT ?SEAM\\b", "\\bSIDE LENGTH\\b", "\\bBODY LENGTH\\b", "\\bFRONT LENGTH\\b"],
+          "exclude": ["^C\\.?B\\b", "^BACK\\b", "\\bIN ?SEAM\\b"]
+        },
+        "size.bottoms_hips": {
+          "kind": "girth",
+          "include": ["\\bHIPS?\\b"],
+          "exclude": []
+        },
+        "size.bottoms_waist": {
+          "kind": "girth",
+          "include": ["\\bWAIST\\b"],
+          "exclude": ["\\bBAND\\b"]
+        },
+        "size.bottoms_inseam": {
+          "kind": "length",
+          "include": ["\\bIN ?SEAM\\b"],
+          "exclude": ["\\bSLEEVE\\b", "\\bSLV\\b"]
+        },
+        "size.bottoms_front_rise": {
+          "kind": "length",
+          "include": ["\\bFR(ON)?T RISE\\b", "^FR(ON)?T\\b.*\\bRISE\\b"],
+          "exclude": []
+        },
+        "size.bottoms_back_rise": {
+          "kind": "length",
+          "include": ["\\bB(A)?CK RISE\\b", "^B(A)?CK\\b.*\\bRISE\\b"],
+          "exclude": []
+        },
+        "size.bottoms_leg_opening": {
+          "kind": "girth",
+          "include": ["\\bLEG OPENING\\b", "\\bHEM OPENING\\b", "\\bBOTTOM OPENING\\b"],
+          "exclude": ["\\bSLEEVE\\b", "\\bSLV\\b"]
+        }
+      }
+    },
+
+    "jumpsuit": {
+      "verified": false,
+      "verified_against": [],
+      "detect": ["\\bJUMPSUIT\\b", "\\bROMPER\\b", "\\bOVERALL\\b", "\\bPLAYSUIT\\b", "\\bCOVERALL\\b"],
+      "columns": {
+        "size.jumpsuit_bust": {
+          "kind": "girth",
+          "include": ["\\bBUST\\b", "\\bCHEST\\b"],
+          "exclude": []
+        },
+        "size.jumpsuit_waist": {
+          "kind": "girth",
+          "include": ["\\bWAIST\\b"],
+          "exclude": ["\\bBAND\\b"]
+        },
+        "size.jumpsuit_armhole": {
+          "kind": "girth",
+          "include": ["\\bARM ?HOLE\\b"],
+          "exclude": ["CURVE", "\\bEDGE\\b", "^FR(ON)?T\\b", "^B(A)?CK\\b", "CONTRAST", "PANEL"]
+        },
+        "size.jumpsuit_sleeve_length": {
+          "kind": "length",
+          "include": ["\\bSLEEVE LENGTH\\b", "\\bSLV LENGTH\\b"],
+          "exclude": ["\\bUNDER ?SLEEVE\\b", "\\bUNDER ?SLV\\b", "\\bCAP\\b"]
+        },
+        "size.jumpsuit_inseam": {
+          "kind": "length",
+          "include": ["\\bIN ?SEAM\\b"],
+          "exclude": ["\\bSLEEVE\\b", "\\bSLV\\b"]
+        },
+        "size.jumpsuit_leg_opening": {
+          "kind": "girth",
+          "include": ["\\bLEG OPENING\\b", "\\bHEM OPENING\\b", "\\bBOTTOM OPENING\\b"],
+          "exclude": ["\\bSLEEVE\\b", "\\bSLV\\b"]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,51 @@
+# size_grid_converter
+
+## Agent skills
+
+### Issue tracker
+
+Issues live as markdown files under `.scratch/<feature-slug>/` in this repo. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five canonical triage roles, using the default label strings. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `CONTEXT.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+
+## This repo
+
+`size-grid-converter` is a Claude Code skill that extracts graded size specs
+from tech-pack `.xlsx` workbooks into `size_guide.csv`. `SKILL.md` is the skill
+itself; `README.md` covers installation and direct script use.
+
+### The rule the tooling is built around
+
+Automate only what is unambiguous; anything ambiguous or uncertain goes to the
+user directly. `scripts/extract_specs.py` classifies every target column as AUTO
+(one matching POM row), MISSING (none — leave blank), or ASK (several — the
+human decides). Never resolve an ASK by inference, and never add tie-breakers to
+`reference/pom_aliases.json` to make ASKs resolve silently: spec sheets genuinely
+disagree about which measurement is "the" hip, and a wrong silent guess in a size
+chart is invisible to everyone downstream.
+
+The rule is not limited to the ASK columns. It covers every judgement in the
+workflow — which attachment, which sheet, which style name, which garment type,
+whether a number looks wrong. Ask before acting rather than guessing and
+flagging it afterwards.
+
+### Before changing the extractor or the aliases
+
+Run `./tests/run_tests.sh` if you have it locally. It rebuilds the size guide
+from the three reference workbooks in `tests/fixtures/` and compares it
+byte-for-byte against `tests/expected/size_guide.csv`. Neither the harness nor
+the workbooks are committed — they hold real factory names, designer names and
+unreleased season specs — so the suite skips cleanly when they're absent. The
+trailing spaces in the CSV number format and its CRLF line endings are
+load-bearing.
+
+`SKILL.md` is deliberately self-contained: the column header, garment families,
+number format and worked examples live in the prompt. Keep it that way — the
+agent should not have to open a CSV or a reference doc to know what the job
+looks like.

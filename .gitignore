@@ -1,0 +1,17 @@
+# Tech-pack workbooks are reference material, not part of the skill. They hold
+# factory names, designer names, internal style codes and unreleased season
+# specs, so they stay local. Drop workbooks in tests/fixtures/ to run the
+# regression suite; it skips cleanly when they are absent.
+tests/fixtures/*.xlsx
+tests/fixtures/*.xls
+
+# Working files
+*.pyc
+__pycache__/
+.DS_Store
+.scratch/
+
+# The regression harness and the sample size guide are local verification aids,
+# not part of the skill. The real destination CSV lives with the user's data.
+tests/
+size_guide.csv

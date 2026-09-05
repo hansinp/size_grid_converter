@@ -1,7 +1,9 @@
 # size-grid-converter
 
-A Claude Code skill that extracts graded size specs from tech-pack `.xlsx`
-workbooks and writes them into a `size_guide.csv` size grid.
+A skill for Claude that extracts graded size specs from tech-pack `.xlsx`
+workbooks and writes them into a `size_guide.csv` size grid. It ships in two
+forms — as a **Claude Code** skill you install from this repo, and as a
+single-file build for **Claude Cowork** that carries its own scripts.
 
 Point it at spec sheets — local files, or attachments on an email it can reach
 through the Microsoft 365 connector — and it fills in the size guide, asking you
@@ -34,8 +36,22 @@ downstream; a question takes five seconds.
 
 ## Install
 
-Requires Claude Code, and either [`uv`](https://docs.astral.sh/uv/) or a Python
-3 with `openpyxl` installed (`pip install openpyxl`).
+Pick the environment you're using.
+
+### In Claude Cowork
+
+Nothing to clone. Give Claude the contents of **`cowork/SKILL.md`** — that one
+file carries the workflow *and* the scripts, and writes them out itself the
+first time it runs. Grab it from
+[the repo](https://github.com/hansinp/size_grid_converter/blob/main/cowork/SKILL.md).
+
+It installs `openpyxl` on first use, so there's no setup beyond handing over the
+file.
+
+### In Claude Code
+
+Requires either [`uv`](https://docs.astral.sh/uv/) or a Python 3 with `openpyxl`
+installed (`pip install openpyxl`).
 
 Clone the repo, then make the skill visible to Claude Code by symlinking it into
 your skills directory:
@@ -100,11 +116,12 @@ cheap.
 | `cowork/preamble.md` | the Cowork-only setup section |
 | `scripts/build_cowork_skill.py` | builds `cowork/SKILL.md`; `--check` verifies it |
 
-### The Cowork build
+### Maintaining the Cowork build
 
-Claude Cowork has no repo checkout, so it needs the skill as one self-contained
+Cowork has no repo checkout, so it needs the skill as one self-contained
 document that recreates the scripts on first run. `cowork/SKILL.md` is that
-document, and it is **generated** — never edit it directly:
+document, and it is **generated** — never edit it directly, edit `SKILL.md`,
+`cowork/preamble.md` or the scripts and rebuild:
 
 ```bash
 python3 scripts/build_cowork_skill.py           # rebuild it

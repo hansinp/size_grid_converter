@@ -34,13 +34,14 @@ downstream; a question takes five seconds.
 
 ## Install
 
-Requires `uv` (or Python with `openpyxl`) and Claude Code.
+Requires Claude Code, and either [`uv`](https://docs.astral.sh/uv/) or a Python
+3 with `openpyxl` installed (`pip install openpyxl`).
 
 Clone the repo, then make the skill visible to Claude Code by symlinking it into
 your skills directory:
 
 ```bash
-git clone <this repo> ~/projects/size_grid_converter
+git clone https://github.com/hansinp/size_grid_converter.git ~/projects/size_grid_converter
 mkdir -p ~/.claude/skills
 ln -s ~/projects/size_grid_converter ~/.claude/skills/size-grid-converter
 ```
@@ -148,3 +149,9 @@ confirm every column the first time you run one.
 
 The Microsoft 365 email step has not been exercised end to end — it needs the
 connector authorized on the account that receives the tech packs.
+
+## Licence
+
+Proprietary — copyright Velvet Inc., all rights reserved. See `LICENSE`. The
+repository is public for convenience of distribution, which is not a grant of
+any right to use it.

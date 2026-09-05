@@ -251,6 +251,10 @@ uv run --with openpyxl python3 size-grid-converter/scripts/extract_specs.py "<wo
     --out /tmp/extraction.json
 ```
 
+If `uv` isn't available (`uv: command not found`), install openpyxl once with
+`pip install --break-system-packages openpyxl` and run the scripts with plain
+`python3` instead — the commands are otherwise identical.
+
 The script prints a report and writes the full JSON. Read the report and check
 three things before going further:
 
@@ -320,6 +324,49 @@ means the source cell holds a formula result that needs a human eye.
 If the destination CSV lives in a connected folder on the user's computer, write
 the update back there. If it only ever existed in this session's working
 directory, deliver the updated CSV as a file so they can save it.
+
+## When the scripts can't handle it
+
+The scripts cover the workbook shapes seen so far. A workbook can fall outside
+them, and when it does the answer is a human decision, not a workaround.
+
+**Never paper over a failure.** Don't silently reconstruct the extraction by
+hand, don't edit `pom_aliases.json` to make an error go away, and don't drop the
+troublesome column and carry on. Instead:
+
+1. **Name the exact exception.** Quote the error verbatim and say what it means
+   in plain terms — which sheet, which column, what the script could not do.
+2. **Say precisely what you would do by hand instead**, naming the sheet, the
+   rows and the values you would read from them.
+3. **Get the user's approval before doing any of it.**
+4. **Do it, then show them the result** so they can check it before it counts as
+   done.
+
+The known case is a graded sheet whose size columns are labelled with numbers
+(`0 2 4 6 8`) rather than `XS`–`XL`. The script anchors on the size header row,
+so it can't find the table at all and reports:
+
+```
+ERROR  No graded-spec sheet found (no sheet has separate XS/S/M/L/XL
+       columns with numeric rows beneath them).
+```
+
+The measurements are still right there in the sheet; only the anchor is missing.
+Tell the user that, offer to read the rows manually, and get their sign-off. A
+hand-built row must still match the format exactly — 26 columns in order, the
+four-character fraction field, CRLF line endings — so reread **The output
+format** above rather than eyeballing it.
+
+Other failures worth surfacing the same way, rather than guessing around:
+
+| What you see | What it usually means |
+| --- | --- |
+| `No graded-spec sheet found` | Numeric sizes as above, or the workbook has no graded sheet at all — only a single-size fit-comment sheet. Ask which sheet they mean; `--sheet "<name>"` forces one. |
+| The wrong sheet was picked | A blank grading template outscored the real sheet. Force it with `--sheet "<name>"` — after confirming which one they want. |
+| A column is MISSING that shouldn't be | The workbook words that POM differently. That's the one case you fix in config: see **Teaching it a new label wording** below. |
+| `--sku` looks like a factory code | Ask for the real style name and pass `--sku`. |
+| `uv: command not found` | See the note under step 2. |
+| Anything else the script prints | Show the user the error and ask. An unfamiliar failure is not yours to interpret. |
 
 ## Teaching it a new label wording
 

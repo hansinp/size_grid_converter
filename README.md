@@ -152,6 +152,6 @@ connector authorized on the account that receives the tech packs.
 
 ## Licence
 
-Proprietary — copyright Velvet Inc., all rights reserved. See `LICENSE`. The
+Proprietary — copyright Velvet LLC, all rights reserved. See `LICENSE`. The
 repository is public for convenience of distribution, which is not a grant of
 any right to use it.

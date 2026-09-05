@@ -31,6 +31,14 @@ passing, and don't quietly narrow the job to the parts you were sure about. The
 user is sitting there and expects to be asked — that is why this runs
 interactively.
 
+Investigating a warning yourself — opening the runner-up sheet to see whether
+it's really a blank template, checking whether an internal-code-looking SKU has
+a friendlier alternative nearby — is good diligence and often worth doing. But
+it does not replace asking. Bring what you found to the user and let them make
+the call, even when you're confident you already know the answer. Deciding for
+them because the investigation felt conclusive is the same mistake as guessing
+without looking.
+
 A wrong number in a size chart is invisible to everyone downstream: nobody can
 tell it was a guess, and it ends up cutting fabric. A question costs the user
 five seconds.
@@ -74,7 +82,9 @@ Beyond the ASK columns, stop and ask the user whenever:
 Batch the questions for one workbook into a single exchange rather than
 interrogating the user one field at a time, and give them the information they
 need to answer: the labels, the numbers, and what the difference means where you
-can see it.
+can see it. If you're working through several workbooks in one session, it's
+fine to batch all of their questions into one round of asks rather than stopping
+after each file.
 
 ## The output format
 
@@ -165,15 +175,50 @@ kind (low, not high), which is exactly why this is never inferred.
 
 ### 1. Get the workbooks onto disk
 
-If the user pointed at local files, use them. If they pointed at an email
-("this email has the files"), use the **Microsoft 365 connector** to find the
-message and download its `.xlsx` attachments into a working directory.
+Work out where the workbooks actually are before doing anything else. If more
+than one plausible source or file is on the table, ask which one they mean
+rather than guessing.
 
-The connector must be authorized first. If its mail tools aren't available,
-call `mcp__claude_ai_Microsoft_365__authenticate`, give the user the URL, and
-wait for them to finish before continuing. Search by whatever the user gave you
-— sender, subject, date, or style name — and confirm which message you found
-before downloading anything.
+- **Already attached to this conversation, or a path they gave you** — read them
+  directly; they're reachable on disk.
+- **On the user's computer** — if a device bridge is available and a folder is
+  connected, work with the files there, staging them into the working directory
+  if a step needs a library only available here. If no computer is connected,
+  ask them to attach the files or connect the folder.
+- **In an email** ("this email has the files") — use the **Microsoft 365
+  connector**, if it's available in this session, to find the message. It must
+  be authorized first; if its mail tools aren't available, call
+  `mcp__claude_ai_Microsoft_365__authenticate`, give the user the URL, and wait.
+  Search by whatever they gave you — sender, subject, date, or style name — and
+  confirm which message, and which files within it, before downloading anything.
+
+When the workbooks come from email, check whether they're real attachments or
+just links, because the right move differs and the two look alike at a glance:
+
+- **A real attachment** — the message's attachment list is genuinely populated,
+  not just text in the body. Download it directly.
+- **A SharePoint/OneDrive link pasted into the body** — common, and easy to
+  mistake for an attachment, so check the attachment list rather than assuming.
+  Do not treat a connector's document-reading call as a substitute for getting
+  the file: it reads a workbook's sheets in file order up to a fixed output
+  size, it cannot be pointed at a specific sheet, and a workbook with many
+  template and cover-page sheets ahead of the real graded sheet may never reach
+  it however many times you retry. Worse, even a fully successful read returns
+  the workbook as *text*, never the file, so `extract_specs.py` still can't run
+  on it and you'd be reduced to reconstructing the extraction by hand — slower
+  and more error-prone than the script it replaces. Don't sink more than one or
+  two attempts into it. Instead, if a browser automation tool is available and
+  already signed into the user's own Microsoft account, drive it to the link and
+  download the file — never enter credentials or sign the user in yourself, only
+  use a session that is already authenticated. Failing that, resolve the direct
+  file link, hand it to the user, and ask them to download it and attach it here
+  or drop it in a connected folder. Either way, a browser download lands on the
+  user's own device, not your workspace: it still has to reach you before
+  extraction can start.
+
+If a file is too large to attach or stage, say so plainly and ask how they'd
+like to get it to you — a smaller re-export, a connected folder — rather than
+retrying a transfer that will keep failing.
 
 ### 2. Extract, one workbook at a time
 
@@ -193,8 +238,9 @@ three things before going further:
   sheet, and the real one is named inconsistently: `SPECS`, `GRADED SPECS.`,
   `GRADING`. One workbook may hold both a single-size fit-comment sheet and a
   graded sheet; only the graded one belongs in the size guide. If the report
-  warns another sheet scored close, confirm with the user. Force one with
-  `--sheet "<name>"`.
+  warns another sheet scored close, confirm with the user — don't settle it
+  yourself and just report the outcome, even if you're confident after looking.
+  Force one with `--sheet "<name>"`.
 - **family** — which column group gets filled. If the script couldn't settle it,
   ask. If it's UNVERIFIED, confirm every column, not just the ambiguous ones.
 
@@ -223,8 +269,10 @@ uv run --with openpyxl python scripts/write_rows.py /tmp/extraction.json \
 ```
 
 The destination is whichever size guide CSV the user named. If they didn't name
-one, ask. Add `--dry-run` first if you want to show the user the rows before
-they land.
+one, ask. If it doesn't exist yet, ask whether to create it: `write_rows.py`
+reads the column order from an existing header, so a new file needs the
+26-column header row above written to it first, and nothing else. Add
+`--dry-run` if you want to show the user the rows before they land.
 
 `write_rows.py` refuses to write while any ASK column is unanswered, and rejects
 an answer that isn't one of the candidate rows — so it cannot be talked into a
@@ -232,12 +280,22 @@ guess. It reads the column order from the destination's own header, and replaces
 any existing rows for that SKU in place, so re-running a workbook is safe and
 corrections are cheap.
 
-### 5. Report back
+### 5. Verify, then report back
+
+Before telling the user you're done, check what you're about to hand over:
+re-run `write_rows.py --dry-run` and diff it against what actually landed in the
+destination, and spot-check a couple of the fraction conversions against the
+source decimals. This is cheap, and it's what catches a formatting slip before
+it ships rather than after it's in a factory's hands.
 
 Tell the user, per workbook: the SKU, the sheet used, which POM row filled each
 column, which cells were left blank, and anything the script warned about.
 Mention any measurement that wasn't an exact sixteenth of an inch — that usually
 means the source cell holds a formula result that needs a human eye.
+
+If the destination CSV lives in a connected folder on the user's computer, write
+the update back there. If it only ever existed in this session's working
+directory, deliver the updated CSV as a file so they can save it.
 
 ## Teaching it a new label wording
 

@@ -95,6 +95,26 @@ cheap.
 | `scripts/extract_specs.py` | workbook → JSON report of POM candidates per column |
 | `scripts/write_rows.py` | report + answers → CSV rows |
 | `reference/pom_aliases.json` | POM label patterns per column — edit to teach new wordings |
+| `cowork/SKILL.md` | **generated** single-file build for Claude Cowork |
+| `cowork/preamble.md` | the Cowork-only setup section |
+| `scripts/build_cowork_skill.py` | builds `cowork/SKILL.md`; `--check` verifies it |
+
+### The Cowork build
+
+Claude Cowork has no repo checkout, so it needs the skill as one self-contained
+document that recreates the scripts on first run. `cowork/SKILL.md` is that
+document, and it is **generated** — never edit it directly:
+
+```bash
+python3 scripts/build_cowork_skill.py           # rebuild it
+python3 scripts/build_cowork_skill.py --check   # verify it is current
+```
+
+The build inlines the real `scripts/` and `reference/` files, rewrites paths to
+the working-directory layout Cowork uses, and drops the YAML frontmatter that
+only Claude Code needs. `--check` fails if the file is stale and also round-trips
+the embedded blocks back out, comparing them byte-for-byte against the sources —
+so an embedded copy cannot silently drift. Run it after touching either script.
 
 `SKILL.md` is self-contained: the 26-column header, the garment families, the
 number format and worked examples all live in the prompt, so the agent never

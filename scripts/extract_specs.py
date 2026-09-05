@@ -30,7 +30,7 @@ try:
 except ModuleNotFoundError:  # pragma: no cover
     sys.exit(
         "openpyxl is required. Run this script with:\n"
-        "    uv run --with openpyxl python scripts/extract_specs.py ...\n"
+        "    uv run --with openpyxl python3 <path to this script> ...\n"
         "or install it with: pip install openpyxl"
     )
 
